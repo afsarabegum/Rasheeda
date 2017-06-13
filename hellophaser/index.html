@@ -1,0 +1,412 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+    <title>Phaser - Making your first game, part 9</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+            
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+function preload() {
+    game.load.audio('jump','assets/jump.ogg');
+    game.load.image('mountains-back','assets/mountains-back.png');
+    game.load.image('mountains-mid1','assets/mountains-mid1.png');
+    game.load.image('mountains-mid2','assets/mountains-mid2.png');
+    game.load.image('sky', 'assets/darkbackground.png');
+    game.load.image('ground', 'assets/forestplatform.png');
+    game.load.image('star', 'assets/donut.png');
+    game.load.image('honeyjar', 'assets/honeyjar.png');
+    game.load.image('box', 'assets/box.png');
+    game.load.image('heart', 'assets/heart.png');
+    game.load.image('button','assets/button.png');
+    game.load.image ('rollingpin','assets/rollingpin.png')
+    game.load.spritesheet('dude', 'assets/policeman.png', 31, 34);
+    game.load.spritesheet ('dog', 'assets/dog4.png', 59.5, 45);
+}
+
+var button;
+var player;
+var platforms;
+var cursors;
+var hound;
+                        
+var stars;
+var honeyjars;
+var boxes;
+var rollingpins;
+
+var score = 0;
+var size = 1;
+var scoreText;
+var lives;
+    
+function create() {
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    
+//    game.stage.backgroundcolor = '#697e96';
+//    
+//    mountainsBack = game.add.tileSprite(0,)
+    
+    //making a parallel world
+    game.world.setBounds(0,0, 4000,600);
+    
+
+    //  A simple background for our game
+    game.add.tileSprite(0, 0, 4000,600, 'sky');
+    
+      // start button
+    button = game.add.button(100, 150, 'button', actionOnClick, this, 2, 1, 0);
+    button.scale.setTo(0.4,0.4);
+    function actionOnClick () {
+    button.visible = false;
+    player.visible = true;
+    hound.visible = true;
+    honeyjars.visible = true;
+    stars.visible = true;
+    boxes.visible = true;
+    rollingpins.visible = true;
+    ground.visible = true;
+    platforms.visible = true;
+        
+        
+        honeyjar.body.gravity.y = 300;
+        //  Here we'll create 12 of them evenly spaced apart
+    for (var i = 0; i < 22; i++)
+    {
+        //  Create a star inside of the 'stars' group
+        var star = stars.create(i * 70, 0, 'star');
+
+        //  Let gravity do its thing
+        star.body.gravity.y = 700;
+
+        //  This just gives each star a slightly random bounce value
+        star.body.bounce.y = 0.3 + Math.random() * 0.2;
+    }
+        box.body.gravity.y = 300;
+        
+        game.time.events.repeat(Phaser.Timer.SECOND, 60, rollingpinSpawn, this);
+        
+        //  rollingpin
+    for (var i = 0; i < 5; i++)
+    {
+        //  Create a rollingpin inside of the 'rollingpin' group when spawn
+        var rollingpin = rollingpins.create(i * 2000, 0, 'rollingpin');
+        rollingpin.body.velocity.x = - 300;
+        rollingpin.body.gravity.y = 400;
+        rollingpin.body.bounce.y = 0.6 + Math.random() * 0.2;
+    }
+        
+        function rollingpinSpawn() {
+            for (var i = 0; i < 1; i++)
+    {
+        //  Create a star inside of the 'stars' group
+        var rollingpin = rollingpins.create(i * 4000, 400, 'rollingpin');
+        rollingpin.body.velocity.x = -300;
+        rollingpin.body.gravity.y = 100;
+        rollingpin.body.bounce.y = 0.6 + Math.random() * 0.2;
+    }
+        }
+}
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = game.add.group();
+
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
+
+    // Here we create the ground.
+    var ground = platforms.create(-350, game.world.height - 64, 'ground');
+
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    ground.scale.setTo(11, 2);
+
+    //  This stops it from falling away when you jump on it
+    ground.body.immovable = true;
+
+    //  Now let's create two ledges
+    var ledge = platforms.create(400, 400, 'ground');
+    ledge.body.immovable = true;
+
+    ledge = platforms.create(-150, 250, 'ground');
+    ledge.body.immovable = true;
+
+    ledge = platforms.create(800, 250, 'ground');
+    ledge.body.immovable = true;
+    
+    ledge = platforms.create(2000, 400, 'ground');
+    ledge.body.immovable = true;
+    
+    ledge = platforms.create(1000, 400, 'ground');
+    ledge.body.immovable = true;
+    
+    ledge = platforms.create(1500, 200, 'ground');
+    ledge.body.immovable = true;
+    
+    ledge = platforms.create(2850, 200, 'ground');
+    ledge.body.immovable = true;
+    
+     ledge = platforms.create(3150, 250, 'ground');
+    ledge.body.immovable = true;
+    
+    
+    // The player + dog and its settings
+    player = game.add.sprite(32, game.world.height - 150, 'dude');
+    hound = game.add.sprite(0,0,'dog');
+
+    //Making sure the monster obeys the same physics as the player
+    game.physics.arcade.enable([player,hound]);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 300;
+    player.body.collideWorldBounds = true;
+
+    hound.body.bounce.y = 0.2;
+    hound.body.gravity.y = 300;
+    hound.body.collideWorldBounds = true;
+
+    //  Our two animations, walking left and right.
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    //make dog move left and right
+    hound.animations.add('dogright',[0,1,2,3],10,true);
+    hound.animations.add('dogleft',[5,6,7,8],10,true);
+
+    // Collect STARS/HONEYJARS/BOXES
+    stars = game.add.group();
+    honeyjars = game.add.group();
+    boxes = game.add.group ();
+    rollingpins = game.add.group ();
+    lives = game.add.group ();  
+
+    //  We will enable physics for any star that is created in this group
+    stars.enableBody = true;
+    honeyjars.enableBody = true;
+    boxes.enableBody = true;
+    rollingpins.enableBody = true;
+    
+    //Honey Jars
+    var honeyjar = honeyjars.create(500, 0, 'honeyjar');
+        // honeyjar.body.gravity.y = 300;
+        honeyjar.body.bounce.y = 0.3 + Math.random() * 0.2;
+    //making the honeyjars smaller
+        honeyjar.scale.setTo(0.1,0.1);
+    
+    //Boxes
+    var box = boxes.create(130, 0,'box');
+//        box.body.gravity.y = 300;
+        box.body.bounce.y = 0.3 + Math.random() * 0.2;
+    //making the box smaller
+        box.scale.setTo(0.4,0.4); 
+        
+//    //Rollingpins
+//    var rollingpin = rollingpins.create(230, 0,'box');
+////        box.body.gravity.y = 300;
+//        rollingpin.body.bounce.y = 0.3 + Math.random() * 0.2;
+//    //making the box smaller
+//        rollingpin.scale.setTo(0.4,0.4); 
+
+    //  The score
+    scoreString = 'Score : ';
+    scoreText = game.add.text(16, 16, scoreString + score, { fontSize: '32px', fill: '#FFF' });
+    scoreText.fixedToCamera= true;
+    
+    //Text
+    stateText = game.add.text(game.world.centerX,game.world.centerY);
+    stateText.anchor.setTo(0.5, 0.5);
+    stateText.visible = false;
+    
+    // Lives
+//    game.add.text(game.world.width - 100,10, 'Lives: ', { font: '34px', fill: '#fff' });
+    lives.fixedToCamera = true;
+    
+    for (var i = 0; i<3; i++){
+        var heart = lives.create(game.width - 160 + (50* i), 40, 'heart');
+        heart.anchor.setTo(0.5,0.5);
+        heart.alpha = 0.4;
+        heart.scale.setTo(0.2);
+    }
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+    
+    //hide things
+    player.visible = false;
+    hound.visible = false;
+    honeyjars.visible = false;
+    stars.visible = false;
+    boxes.visible = false;
+    rollingpins.visible = false;
+    ground.visible = false;
+    platforms.visible = false;
+}
+    
+
+function update() {
+    
+    //  Collide the player and the stars with the platforms
+    game.physics.arcade.collide(player, platforms);
+    game.physics.arcade.collide(stars, platforms);
+    game.physics.arcade.collide(honeyjars, platforms);
+    game.physics.arcade.collide(boxes, platforms);
+    game.physics.arcade.collide(rollingpins, platforms);
+    game.physics.arcade.collide(hound, platforms);
+
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    game.physics.arcade.overlap(player, honeyjars, collectHoneyjar, null, this);
+    game.physics.arcade.overlap(player, boxes, collectBox, null, this);
+    game.physics.arcade.overlap(player, rollingpins, collectRollingpin, null, this);
+    game.physics.arcade.overlap(hound, player, dogEat, null, this);
+
+    //  Reset the players velocity (movement)
+    player.body.velocity.x = 0;
+
+    if (cursors.left.isDown) {
+        //  Move to the left
+        player.body.velocity.x = -150;
+        player.animations.play('left');
+    }
+    else if (cursors.right.isDown){
+        //  Move to the right
+        player.body.velocity.x = 150;
+        player.animations.play('right');
+    }
+    else {
+        //  Stand still
+        player.animations.stop();
+        player.frame = 4;
+    }
+    
+    //  Allow the player to jump if they are touching the ground.
+    if (cursors.up.isDown && player.body.touching.down) {
+        var snd = game.add.audio("jump");
+        snd.play()
+        
+        player.body.velocity.y = -350;
+    }
+    
+    // Hound a.k.a DOG chases player
+     if (player.body.x < hound.body.x - 48) {
+         hound.body.velocity.x = -100;
+         hound.animations.play('dogleft');
+     }
+     else if (player.body.x > hound.body.x + 48) {
+         hound.body.velocity.x = 100;
+         hound.animations.play('dogright');
+     }
+     else {
+         hound.animations.stop();
+         hound.frame = 4;
+        }
+    //  Allow the player to jump if they are touching the ground.
+    if (hound.body.touching.down) {
+        hound.body.velocity.y = -350;
+    }
+
+    if (score > 20 && score < 25) {
+        scoreText.text = 'Congratulations!';
+    }
+    
+    game.camera.x = player.body.x - 432;
+        
+}
+
+function collectStar (player, star) {
+    
+    // Removes the star from the screen
+    star.kill();
+
+    //  Add and update the score
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+
+}
+    
+function collectHoneyjar (player, honeyjar) {
+    
+    //Remove honeyjar from screen
+    honeyjar.kill();
+    
+    // Add and update the score
+    score += 30;
+    scoreText.text = 'Score: ' +score;
+    // Make player bigger when they toucn honeyjar
+    size += 1;
+    player.scale.setTo(size, size);
+    game.time.events.repeat(Phaser.Timer.SECOND, 10, sizeDecay, this);
+}
+    
+function sizeDecay() {
+                if (size != 1) {
+                    size -= 1;
+                    player.scale.setTo( 0.8, 0.8);
+                }
+            }
+
+function collectBox (player, box) {
+    box.kill();
+    score += 50;
+    scoreText.text = 'Score: '+score;
+}
+    
+function collectRollingpin (player, rollingpin){
+    rollingpin.kill();
+    live = lives.getFirstAlive ();
+    
+    if (live){
+        live.kill();
+        player.revive();
+    }
+    if (lives.countLiving ()> 0){
+        player.body.x = 50;
+        player.body.y = 50;
+    }
+}
+    
+function dogEat (hound, player) {
+    //Removes a life 
+    live = lives.getFirstAlive();
+
+    if (live) {
+        live.kill();
+    }
+    
+    if (lives.countLiving()>0) {
+        player.body.x = 32;
+        player.body.y = 501.99999999999994;
+        hound.body.x = 100;
+        hound.body.y = -100;
+    }
+    
+   else if (lives.countLiving()<1) {
+        player.kill();
+       
+       stateText = game.add.text (310,200, 'GAME OVER', { fontSize: '32px', fill: '#FFF'});
+        button = game.add.button(100, 150, 'button', restart, this, 2, 1, 0);
+        button.scale.setTo(0.4,0.4);
+        button.fixedToCamera= true;                                                                                                                                                      
+    }
+    
+        }
+    
+function restart(){
+    location.reload();   
+}
+
+</script>
+
+</body>
+</html>
